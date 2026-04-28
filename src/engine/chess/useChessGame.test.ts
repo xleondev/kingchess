@@ -45,4 +45,36 @@ describe('useChessGame', () => {
     expect(result.current.turn).toBe('w')
     expect(result.current.history).toHaveLength(0)
   })
+
+  it('makeMove returns true on legal move and false on illegal move', () => {
+    const { result } = renderHook(() => useChessGame())
+    let legalResult: boolean
+    let illegalResult: boolean
+    act(() => { legalResult = result.current.makeMove('e2', 'e4') })
+    act(() => { illegalResult = result.current.makeMove('e4', 'e7') })
+    expect(legalResult!).toBe(true)
+    expect(illegalResult!).toBe(false)
+  })
+
+  it('reset with valid FEN loads that position', () => {
+    const { result } = renderHook(() => useChessGame())
+    const checkmateFen = '4k3/4Q3/4K3/8/8/8/8/8 b - - 0 1'
+    act(() => { result.current.reset(checkmateFen) })
+    expect(result.current.isCheckmate).toBe(true)
+  })
+
+  it('reset with invalid FEN leaves state unchanged', () => {
+    const { result } = renderHook(() => useChessGame())
+    act(() => { result.current.makeMove('e2', 'e4') })
+    act(() => { result.current.reset('not-a-valid-fen') })
+    // State unchanged — still has one move in history
+    expect(result.current.history).toHaveLength(1)
+  })
+
+  it('history contains the move after makeMove', () => {
+    const { result } = renderHook(() => useChessGame())
+    act(() => { result.current.makeMove('e2', 'e4') })
+    expect(result.current.history).toHaveLength(1)
+    expect(result.current.history[0]).toMatch(/e4/)
+  })
 })
