@@ -1,6 +1,7 @@
-import { useCallback, useMemo } from 'react'
+import { useCallback, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useChessGame } from '../../engine/chess/useChessGame'
+import { useProgress } from '../../lib/progress/useProgress'
 import { Board } from '../../components/Board/Board'
 import { GameHeader } from '../../components/Game/GameHeader'
 
@@ -12,6 +13,14 @@ interface LocalGameProps {
 export function LocalGame({ playerWhite = 'Player 1', playerBlack = 'Player 2' }: LocalGameProps) {
   const navigate = useNavigate()
   const { fen, turn, isCheck, isCheckmate, isStalemate, gameOver, getLegalMoves, makeMove, reset } = useChessGame()
+  const { recordWin, awardBadge } = useProgress()
+
+  useEffect(() => {
+    if (isCheckmate) {
+      recordWin()
+      awardBadge('First Checkmate!')
+    }
+  }, [isCheckmate])
 
   const legalMoves = useMemo(() => {
     const map: Record<string, string[]> = {}

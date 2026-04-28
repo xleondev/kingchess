@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useChessGame } from '../../engine/chess/useChessGame'
 import { useStockfish } from '../../engine/stockfish/useStockfish'
+import { useProgress } from '../../lib/progress/useProgress'
 import { Board } from '../../components/Board/Board'
 import { GameHeader } from '../../components/Game/GameHeader'
 
@@ -22,6 +23,15 @@ export function MachineGame() {
 
   const { fen, turn, isCheck, isCheckmate, isStalemate, gameOver, getLegalMoves, makeMove, reset } = useChessGame()
   const { getBestMove } = useStockfish()
+  const { recordWin, awardBadge } = useProgress()
+
+  useEffect(() => {
+    if (isCheckmate && turn === 'b') {
+      // Black king is mated — white (player) won
+      recordWin()
+      awardBadge('Beat the Computer!')
+    }
+  }, [isCheckmate, turn])
 
   const legalMoves = useMemo(() => {
     if (turn !== playerColor || gameOver) return {}
