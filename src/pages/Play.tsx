@@ -2,8 +2,9 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { LocalGame } from './game/LocalGame'
 import { MachineGame } from './game/MachineGame'
+import { OnlineGame } from './game/OnlineGame'
 
-type Mode = null | 'local' | 'machine'
+type Mode = null | 'local' | 'machine' | 'online'
 
 export function Play() {
   const navigate = useNavigate()
@@ -11,6 +12,7 @@ export function Play() {
 
   if (mode === 'local') return <LocalGame />
   if (mode === 'machine') return <MachineGame />
+  if (mode === 'online') return <OnlineGame />
 
   return (
     <div className="min-h-screen bg-brand-cream flex flex-col items-center justify-center gap-6 p-6">
@@ -23,8 +25,8 @@ export function Play() {
         <button onClick={() => setMode('machine')} className="bg-brand-gold text-white py-4 rounded-2xl font-bold text-xl shadow-lg">
           🤖 vs Computer
         </button>
-        <button disabled className="bg-purple-600 text-white py-4 rounded-2xl font-bold text-xl shadow-lg opacity-60 cursor-not-allowed">
-          🌐 Online (coming soon)
+        <button onClick={() => setMode('online')} className="bg-purple-600 text-white py-4 rounded-2xl font-bold text-xl shadow-lg">
+          🌐 Online 2-Player
         </button>
       </div>
     </div>
