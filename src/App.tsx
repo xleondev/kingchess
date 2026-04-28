@@ -1,5 +1,20 @@
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { Home } from './pages/Home'
+import { Play } from './pages/Play'
+import { Learn } from './pages/Learn'
+import { Puzzles } from './pages/Puzzles'
+import { Profile } from './pages/Profile'
+
 export default function App() {
-  return <div className="min-h-screen bg-brand-cream flex items-center justify-center">
-    <h1 className="text-4xl font-bold text-brand-green">KingChess</h1>
-  </div>
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/play" element={<Play />} />
+        <Route path="/learn" element={<Learn />} />
+        <Route path="/puzzles" element={<Puzzles />} />
+        <Route path="/profile" element={<Profile />} />
+      </Routes>
+    </BrowserRouter>
+  )
 }
