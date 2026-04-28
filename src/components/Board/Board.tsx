@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo, useEffect } from 'react'
 import { Chess } from 'chess.js'
 import { Square } from './Square'
 
@@ -32,7 +32,14 @@ const RANKS = [8, 7, 6, 5, 4, 3, 2, 1]
 
 export function Board({ fen, turn, onMove, legalMoves = {}, inCheck = false, flipped = false }: BoardProps) {
   const [selected, setSelected] = useState<string | null>(null)
-  const pieceMap = fenToPieceMap(fen)
+
+  // Memoize the piece map — only recompute when fen changes
+  const pieceMap = useMemo(() => fenToPieceMap(fen), [fen])
+
+  // Clear selection when the board position changes externally (e.g. AI move)
+  useEffect(() => {
+    setSelected(null)
+  }, [fen])
 
   const files = flipped ? [...FILES].reverse() : FILES
   const ranks = flipped ? [...RANKS].reverse() : RANKS
@@ -56,11 +63,12 @@ export function Board({ fen, turn, onMove, legalMoves = {}, inCheck = false, fli
 
   return (
     <div className="aspect-square w-full max-w-[600px] grid grid-cols-8 grid-rows-8 rounded-lg overflow-hidden shadow-2xl border-4 border-brand-gold">
-      {ranks.map((rank) =>
-        files.map((file) => {
+      {ranks.map((rank, ri) =>
+        files.map((file, fi) => {
           const square = `${file}${rank}`
-          const fileIdx = FILES.indexOf(file)
-          const rankIdx = RANKS.indexOf(rank)
+          // Use actual rank/file index (not flipped index) for consistent light/dark pattern
+          const fileIdx = flipped ? FILES.length - 1 - fi : fi
+          const rankIdx = flipped ? RANKS.length - 1 - ri : ri
           const isLight = (fileIdx + rankIdx) % 2 === 0
           const piece = pieceMap[square]
           const isSelected = selected === square

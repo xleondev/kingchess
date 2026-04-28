@@ -13,7 +13,7 @@ interface SquareProps {
 export function Square({ square, isLight, piece, isSelected, isLegalTarget, isCheck, onClick }: SquareProps) {
   let bg = isLight ? 'bg-board-light' : 'bg-board-dark'
   if (isSelected) bg = 'bg-board-highlight'
-  if (isCheck && piece?.endsWith('K')) bg = 'bg-board-check'
+  if (isCheck) bg = 'bg-board-check'
 
   return (
     <div
