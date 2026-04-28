@@ -1,5 +1,4 @@
 import { useRef, useCallback, useEffect } from 'react'
-import StockfishWorker from './stockfish.worker.ts?worker'
 
 const SKILL_MAP: Record<string, number> = {
   easy: 3,
@@ -32,7 +31,7 @@ export function useStockfish() {
   }, [])
 
   useEffect(() => {
-    const worker = new StockfishWorker()
+    const worker = new Worker('/stockfish.worker.js')
     workerRef.current = worker
 
     const handleMessage = (e: MessageEvent<string>) => {

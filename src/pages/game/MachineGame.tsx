@@ -98,11 +98,8 @@ export function MachineGame() {
         isCheck={isCheck}
         isCheckmate={isCheckmate}
         isStalemate={isStalemate}
+        thinking={thinking}
       />
-
-      {thinking && (
-        <p className="text-brand-green font-semibold animate-pulse text-sm">Computer is thinking...</p>
-      )}
 
       <Board
         fen={fen}
