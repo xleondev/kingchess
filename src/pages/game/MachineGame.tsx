@@ -31,7 +31,7 @@ export function MachineGame() {
       recordWin()
       awardBadge('Beat the Computer!')
     }
-  }, [isCheckmate, turn])
+  }, [isCheckmate, turn, recordWin, awardBadge])
 
   const legalMoves = useMemo(() => {
     if (turn !== playerColor || gameOver) return {}
@@ -64,7 +64,7 @@ export function MachineGame() {
         if (!cancelled) setThinking(false)
       })
     return () => { cancelled = true }
-  }, [turn, fen, gameOver, difficulty])
+  }, [turn, fen, gameOver, difficulty, getBestMove, makeMove])
 
   if (!difficulty) {
     return (

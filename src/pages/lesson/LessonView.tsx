@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { Board } from '../../components/Board/Board'
 import type { Lesson } from '../../lessons/lessons'
 
@@ -13,8 +13,8 @@ export function LessonView({ lesson, onComplete, onBack, isCompleted }: LessonVi
   const [phase, setPhase] = useState<'read' | 'quiz'>('read')
   const [quizIndex, setQuizIndex] = useState(0)
   const [selected, setSelected] = useState<number | null>(null)
-  const [correct, setCorrect] = useState(0)
   const [done, setDone] = useState(false)
+  const correctRef = useRef(0)
 
   const quiz = lesson.quiz[quizIndex]
 
@@ -22,14 +22,13 @@ export function LessonView({ lesson, onComplete, onBack, isCompleted }: LessonVi
     if (selected !== null) return // already answered this question
     setSelected(idx)
     const isCorrect = idx === quiz.correct
-    const newCorrect = correct + (isCorrect ? 1 : 0)
+    if (isCorrect) correctRef.current += 1
+
     setTimeout(() => {
       if (quizIndex + 1 < lesson.quiz.length) {
         setQuizIndex((i) => i + 1)
         setSelected(null)
-        if (isCorrect) setCorrect(newCorrect)
       } else {
-        if (isCorrect) setCorrect(newCorrect)
         setDone(true)
         if (!isCompleted) onComplete(lesson.id)
       }
@@ -83,9 +82,9 @@ export function LessonView({ lesson, onComplete, onBack, isCompleted }: LessonVi
 
       {done && (
         <div className="text-center flex flex-col gap-4">
-          <div className="text-5xl">{correct === lesson.quiz.length ? '🎉' : '👍'}</div>
+          <div className="text-5xl">{correctRef.current === lesson.quiz.length ? '🎉' : '👍'}</div>
           <p className="text-2xl font-bold text-brand-green">
-            {correct}/{lesson.quiz.length} correct!
+            {correctRef.current}/{lesson.quiz.length} correct!
           </p>
           {isCompleted && <p className="text-green-600 font-semibold">Lesson already completed — great review!</p>}
           <button onClick={onBack} className="bg-brand-green text-white py-3 rounded-xl font-bold text-lg">

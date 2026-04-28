@@ -1,17 +1,31 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useOnlineGame } from '../../lib/supabase/useOnlineGame'
+import { useProgress } from '../../lib/progress/useProgress'
 import { Board } from '../../components/Board/Board'
 import { GameHeader } from '../../components/Game/GameHeader'
 
 export function OnlineGame() {
   const navigate = useNavigate()
   const [input, setInput] = useState('')
+  const { recordWin, awardBadge } = useProgress()
   const {
     roomCode, playerColor, fen, status, error,
     turn, isCheck, isCheckmate, isStalemate, gameOver,
     getLegalMoves, createRoom, joinRoom, sendMove,
   } = useOnlineGame()
+
+  useEffect(() => {
+    if (isCheckmate && playerColor) {
+      // turn is now the mated side's turn (they can't move) = loser
+      // so winner is opposite of turn
+      if (turn !== playerColor) {
+        // opponent's king is mated — player wins
+        recordWin()
+        awardBadge('Online Victor!')
+      }
+    }
+  }, [isCheckmate, turn, playerColor, recordWin, awardBadge])
 
   const legalMoves = useMemo(() => {
     if (!playerColor || turn !== playerColor || gameOver) return {}

@@ -20,7 +20,7 @@ export function LocalGame({ playerWhite = 'Player 1', playerBlack = 'Player 2' }
       recordWin()
       awardBadge('First Checkmate!')
     }
-  }, [isCheckmate])
+  }, [isCheckmate, recordWin, awardBadge])
 
   const legalMoves = useMemo(() => {
     const map: Record<string, string[]> = {}
