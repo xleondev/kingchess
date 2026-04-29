@@ -13,6 +13,7 @@ export function useOnlineGame() {
   const [roomCode, setRoomCode] = useState('')
   const [gameId, setGameId] = useState<string | null>(null)
   const [playerColor, setPlayerColor] = useState<'w' | 'b' | null>(null)
+  const playerColorRef = useRef<'w' | 'b' | null>(null)
   const chessRef = useRef(new Chess())
   const [fen, setFen] = useState(chessRef.current.fen())
   const [status, setStatus] = useState<OnlineGameStatus>('idle')
@@ -32,6 +33,7 @@ export function useOnlineGame() {
       setError(err?.message ?? 'Failed to create room')
       return
     }
+    playerColorRef.current = 'w'
     setRoomCode(code)
     setGameId(data.id as string)
     setPlayerColor('w')
@@ -62,13 +64,14 @@ export function useOnlineGame() {
       return
     }
 
+    playerColorRef.current = 'b'
     setRoomCode(upper)
     setGameId(data.id as string)
     setPlayerColor('b')
     setStatus('active')
   }, [])
 
-  // Subscribe to broadcasts: join signal + opponent moves
+  // Subscribe to channel — send join signal only after subscription is confirmed
   useEffect(() => {
     if (!gameId) return
 
@@ -87,7 +90,16 @@ export function useOnlineGame() {
           // Invalid FEN — ignore
         }
       })
-      .subscribe()
+      .subscribe((subStatus) => {
+        // Only Player 2 sends the join signal, and only once fully subscribed
+        if (subStatus === 'SUBSCRIBED' && playerColorRef.current === 'b') {
+          channel.send({
+            type: 'broadcast',
+            event: 'player_joined',
+            payload: {},
+          })
+        }
+      })
 
     channelRef.current = channel
 
@@ -96,16 +108,6 @@ export function useOnlineGame() {
       channelRef.current = null
     }
   }, [gameId])
-
-  // Broadcast join signal once channel is ready (Player 2 only)
-  useEffect(() => {
-    if (playerColor !== 'b' || !channelRef.current || status !== 'active') return
-    channelRef.current.send({
-      type: 'broadcast',
-      event: 'player_joined',
-      payload: {},
-    })
-  }, [playerColor, status])
 
   const sendMove = useCallback(async (from: string, to: string): Promise<boolean> => {
     if (!gameId || !channelRef.current) return false
@@ -120,14 +122,14 @@ export function useOnlineGame() {
     const newFen = chess.fen()
     setFen(newFen)
 
-    // Broadcast move to opponent immediately
+    // Broadcast move to opponent
     channelRef.current.send({
       type: 'broadcast',
       event: 'move',
       payload: { fen: newFen },
     })
 
-    // Persist to DB for record-keeping
+    // Persist to DB
     supabase.from('game_moves').insert({
       game_id: gameId,
       move: `${from}${to}`,
