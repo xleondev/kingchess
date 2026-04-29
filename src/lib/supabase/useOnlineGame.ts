@@ -65,9 +65,16 @@ export function useOnlineGame() {
     setGameId(data.id as string)
     setPlayerColor('b')
     setStatus('active')
+
+    // Broadcast join signal so Player 1 transitions to the game screen
+    await supabase.channel(`game:${data.id}`).send({
+      type: 'broadcast',
+      event: 'player_joined',
+      payload: {},
+    })
   }, [])
 
-  // Subscribe to real-time move updates and game status changes
+  // Subscribe to real-time move updates and join signals
   useEffect(() => {
     if (!gameId) return
 
@@ -75,6 +82,11 @@ export function useOnlineGame() {
 
     const channel = supabase
       .channel(`game:${gameId}`)
+      // Broadcast: Player 2 signals they joined — Player 1 transitions to active
+      .on('broadcast', { event: 'player_joined' }, () => {
+        setStatus('active')
+      })
+      // Postgres changes: sync moves from opponent
       .on(
         'postgres_changes',
         {
@@ -91,20 +103,6 @@ export function useOnlineGame() {
           } catch {
             // Invalid FEN from server — ignore
           }
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'games',
-        },
-        (payload) => {
-          const row = payload.new as { id: string; status: string }
-          if (row.id !== gameId) return
-          if (row.status === 'active') setStatus('active')
-          if (row.status === 'done') setStatus('done')
         }
       )
       .subscribe()
