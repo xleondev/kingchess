@@ -8,9 +8,10 @@ import { GameHeader } from '../../components/Game/GameHeader'
 interface LocalGameProps {
   playerWhite?: string
   playerBlack?: string
+  onBack?: () => void
 }
 
-export function LocalGame({ playerWhite = 'Player 1', playerBlack = 'Player 2' }: LocalGameProps) {
+export function LocalGame({ playerWhite = 'Player 1', playerBlack = 'Player 2', onBack }: LocalGameProps) {
   const navigate = useNavigate()
   const { fen, turn, isCheck, isCheckmate, isStalemate, gameOver, getLegalMoves, makeMove, reset } = useChessGame()
   const { recordWin, awardBadge } = useProgress()
@@ -41,7 +42,7 @@ export function LocalGame({ playerWhite = 'Player 1', playerBlack = 'Player 2' }
 
   return (
     <div className="min-h-screen bg-brand-cream flex flex-col items-center p-4 gap-4">
-      <button onClick={() => navigate('/play')} className="self-start text-brand-green font-semibold">← Back</button>
+      <button onClick={() => onBack ? onBack() : navigate('/')} className="self-start text-brand-green font-semibold">← Back</button>
 
       <GameHeader
         turn={turn}

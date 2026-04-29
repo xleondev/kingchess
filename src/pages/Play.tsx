@@ -10,9 +10,9 @@ export function Play() {
   const navigate = useNavigate()
   const [mode, setMode] = useState<Mode>(null)
 
-  if (mode === 'local') return <LocalGame />
-  if (mode === 'machine') return <MachineGame />
-  if (mode === 'online') return <OnlineGame />
+  if (mode === 'local') return <LocalGame onBack={() => setMode(null)} />
+  if (mode === 'machine') return <MachineGame onBack={() => setMode(null)} />
+  if (mode === 'online') return <OnlineGame onBack={() => setMode(null)} />
 
   return (
     <div className="min-h-screen bg-brand-cream flex flex-col items-center justify-center gap-6 p-6">

@@ -5,7 +5,7 @@ import { useProgress } from '../../lib/progress/useProgress'
 import { Board } from '../../components/Board/Board'
 import { GameHeader } from '../../components/Game/GameHeader'
 
-export function OnlineGame() {
+export function OnlineGame({ onBack }: { onBack?: () => void }) {
   const navigate = useNavigate()
   const [input, setInput] = useState('')
   const { recordWin, awardBadge } = useProgress()
@@ -43,7 +43,7 @@ export function OnlineGame() {
   if (status === 'idle') {
     return (
       <div className="min-h-screen bg-brand-cream flex flex-col items-center justify-center gap-6 p-6">
-        <button onClick={() => navigate('/play')} className="self-start text-brand-green font-semibold">← Back</button>
+        <button onClick={() => onBack ? onBack() : navigate('/') } className="self-start text-brand-green font-semibold">← Back</button>
         <h1 className="text-3xl font-bold text-brand-green">Online Play</h1>
         {error && <p className="text-red-500 font-medium">{error}</p>}
         <button
@@ -81,7 +81,7 @@ export function OnlineGame() {
           {roomCode}
         </div>
         <p className="text-gray-400 animate-pulse mt-2">Waiting for opponent to join...</p>
-        <button onClick={() => navigate('/play')} className="text-sm text-gray-400 underline mt-4">
+        <button onClick={() => onBack ? onBack() : navigate('/') } className="text-sm text-gray-400 underline mt-4">
           Cancel
         </button>
       </div>
@@ -90,7 +90,7 @@ export function OnlineGame() {
 
   return (
     <div className="min-h-screen bg-brand-cream flex flex-col items-center p-4 gap-4">
-      <button onClick={() => navigate('/play')} className="self-start text-brand-green font-semibold">← Back</button>
+      <button onClick={() => onBack ? onBack() : navigate('/') } className="self-start text-brand-green font-semibold">← Back</button>
       <p className="text-sm text-gray-500">
         Room: <span className="font-mono font-bold">{roomCode}</span> · You are{' '}
         <span className="font-bold">{playerColor === 'w' ? 'White' : 'Black'}</span>

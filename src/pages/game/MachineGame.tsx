@@ -15,7 +15,7 @@ const DIFFICULTY_OPTIONS: { label: string; value: Difficulty; emoji: string }[] 
   { label: 'Adaptive', value: 'adaptive', emoji: '🧠' },
 ]
 
-export function MachineGame() {
+export function MachineGame({ onBack }: { onBack?: () => void }) {
   const navigate = useNavigate()
   const [difficulty, setDifficulty] = useState<Difficulty | null>(null)
   const [playerColor] = useState<'w' | 'b'>('w')
@@ -69,7 +69,7 @@ export function MachineGame() {
   if (!difficulty) {
     return (
       <div className="min-h-screen bg-brand-cream flex flex-col items-center justify-center gap-6 p-6">
-        <button onClick={() => navigate('/play')} className="self-start text-brand-green font-semibold">← Back</button>
+        <button onClick={() => onBack ? onBack() : navigate('/') } className="self-start text-brand-green font-semibold">← Back</button>
         <h1 className="text-3xl font-bold text-brand-green">Choose Difficulty</h1>
         <div className="flex flex-col gap-4 w-full max-w-xs">
           {DIFFICULTY_OPTIONS.map(({ label, value, emoji }) => (
@@ -89,7 +89,7 @@ export function MachineGame() {
 
   return (
     <div className="min-h-screen bg-brand-cream flex flex-col items-center p-4 gap-4">
-      <button onClick={() => navigate('/play')} className="self-start text-brand-green font-semibold">← Back</button>
+      <button onClick={() => onBack ? onBack() : navigate('/') } className="self-start text-brand-green font-semibold">← Back</button>
 
       <GameHeader
         turn={turn}
