@@ -17,6 +17,7 @@ export function useOnlineGame() {
   const [fen, setFen] = useState(chessRef.current.fen())
   const [status, setStatus] = useState<OnlineGameStatus>('idle')
   const [error, setError] = useState('')
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
 
   const createRoom = useCallback(async () => {
     setError('')
@@ -65,55 +66,49 @@ export function useOnlineGame() {
     setGameId(data.id as string)
     setPlayerColor('b')
     setStatus('active')
-
-    // Broadcast join signal so Player 1 transitions to the game screen
-    await supabase.channel(`game:${data.id}`).send({
-      type: 'broadcast',
-      event: 'player_joined',
-      payload: {},
-    })
   }, [])
 
-  // Subscribe to real-time move updates and join signals
+  // Subscribe to broadcasts: join signal + opponent moves
   useEffect(() => {
     if (!gameId) return
 
     const chess = chessRef.current
 
     const channel = supabase
-      .channel(`game:${gameId}`)
-      // Broadcast: Player 2 signals they joined — Player 1 transitions to active
+      .channel(`game:${gameId}`, { config: { broadcast: { self: false } } })
       .on('broadcast', { event: 'player_joined' }, () => {
         setStatus('active')
       })
-      // Postgres changes: sync moves from opponent
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'game_moves',
-          filter: `game_id=eq.${gameId}`,
-        },
-        (payload) => {
-          const newFen = (payload.new as { fen: string }).fen
-          try {
-            chess.load(newFen)
-            setFen(chess.fen())
-          } catch {
-            // Invalid FEN from server — ignore
-          }
+      .on('broadcast', { event: 'move' }, ({ payload }) => {
+        try {
+          chess.load(payload.fen as string)
+          setFen(chess.fen())
+        } catch {
+          // Invalid FEN — ignore
         }
-      )
+      })
       .subscribe()
+
+    channelRef.current = channel
 
     return () => {
       supabase.removeChannel(channel)
+      channelRef.current = null
     }
   }, [gameId])
 
+  // Broadcast join signal once channel is ready (Player 2 only)
+  useEffect(() => {
+    if (playerColor !== 'b' || !channelRef.current || status !== 'active') return
+    channelRef.current.send({
+      type: 'broadcast',
+      event: 'player_joined',
+      payload: {},
+    })
+  }, [playerColor, status])
+
   const sendMove = useCallback(async (from: string, to: string): Promise<boolean> => {
-    if (!gameId) return false
+    if (!gameId || !channelRef.current) return false
     const chess = chessRef.current
     try {
       const result = chess.move({ from: from as any, to: to as any, promotion: 'q' })
@@ -125,18 +120,19 @@ export function useOnlineGame() {
     const newFen = chess.fen()
     setFen(newFen)
 
-    const { error: err } = await supabase.from('game_moves').insert({
+    // Broadcast move to opponent immediately
+    channelRef.current.send({
+      type: 'broadcast',
+      event: 'move',
+      payload: { fen: newFen },
+    })
+
+    // Persist to DB for record-keeping
+    supabase.from('game_moves').insert({
       game_id: gameId,
       move: `${from}${to}`,
       fen: newFen,
     })
-
-    if (err) {
-      // Rollback local move on network failure
-      chess.undo()
-      setFen(chess.fen())
-      return false
-    }
 
     return true
   }, [gameId])
