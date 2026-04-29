@@ -99,12 +99,12 @@ export function useOnlineGame() {
           event: 'UPDATE',
           schema: 'public',
           table: 'games',
-          filter: `id=eq.${gameId}`,
         },
         (payload) => {
-          const newStatus = (payload.new as { status: string }).status
-          if (newStatus === 'active') setStatus('active')
-          if (newStatus === 'done') setStatus('done')
+          const row = payload.new as { id: string; status: string }
+          if (row.id !== gameId) return
+          if (row.status === 'active') setStatus('active')
+          if (row.status === 'done') setStatus('done')
         }
       )
       .subscribe()
